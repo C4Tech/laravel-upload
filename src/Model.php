@@ -23,4 +23,15 @@ class Model extends BaseModel implements UploadInterface
     {
         return 'upload_id';
     }
+
+    /**
+     * Uploadable
+     *
+     * Polymorphic relationship to models that have uploads.
+     * @return \Illuminate\Database\Eloquent\Relations\MorphTo
+     */
+    public function uploadable()
+    {
+        return $this->morphTo();
+    }
 }

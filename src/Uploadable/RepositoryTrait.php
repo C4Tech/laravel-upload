@@ -21,8 +21,12 @@ trait RepositoryTrait
      */
     protected function listenToUpload()
     {
+        if (!($model = $this->getModelClass())) {
+            return;
+        }
+
         if (Config::get('app.debug')) {
-            Log::debug('Binding upload relationship caches', ['uploadable' => static::$model]);
+            Log::debug('Binding upload relationship caches', ['uploadable' => $model]);
         }
 
         $flush = function ($upload) {
@@ -43,7 +47,6 @@ trait RepositoryTrait
             }
         };
 
-        $model = Config::get('foundation.:models.upload', 'C4tech\Upload\Model');
         $model::updated($flush);
         $model::deleted($flush);
     }
@@ -58,7 +61,7 @@ trait RepositoryTrait
     public function getWithUpload(UploadInterface $upload)
     {
         return $this->object->hasUpload($upload)
-            ->cacheTags([Upload::formatTag($upload->id, static::$model)])
+            ->cacheTags([Upload::formatTag($upload->id, $this->getModelClass())])
             ->remember(static::CACHE_SHORT)
             ->get();
     }
@@ -70,9 +73,7 @@ trait RepositoryTrait
      */
     public function uploads()
     {
-        return $this->object->uploads()
-            ->cacheTags($this->getTags('uploads'))
-            ->remember(static::CACHE_LONG);
+        return $this->object->uploads();
     }
 
     /**
@@ -83,6 +84,21 @@ trait RepositoryTrait
      */
     public function getUploads()
     {
-        return $this->uploads()->get();
+        return Cache::tags($this->formatTag('uploads'))
+            ->remember(
+                $this->getCacheId('uploads'),
+                self::CACHE_LONG,
+                function () {
+                    $uploads = $this->uploads()->get();
+
+                    if ($uploads->count()) {
+                        $uploads = $uploads->map(function ($upload) {
+                            return static::make($upload);
+                        });
+                    }
+
+                    return $uploads;
+                }
+            );
     }
 }
