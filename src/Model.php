@@ -1,7 +1,7 @@
 <?php namespace C4tech\Upload;
 
 use C4tech\Support\Model as BaseModel;
-use C4tech\Upload\Contracts\UploadInterface;
+use C4tech\Upload\Contracts\UploadModelInterface;
 use Illuminate\Support\Facades\Config;
 
 /**
@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Config;
  *
  * An upload.
  */
-class Model extends BaseModel implements UploadInterface
+class Model extends BaseModel implements UploadModelInterface
 {
     /**
      * @inheritdoc

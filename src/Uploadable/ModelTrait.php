@@ -1,6 +1,6 @@
 <?php namespace C4tech\Upload\Uploadable;
 
-use C4tech\Upload\Contracts\UploadableInterface;
+use C4tech\Upload\Contracts\UploadModelInterface;
 use Illuminate\Support\Facades\Config;
 
 /**
@@ -24,10 +24,10 @@ trait ModelTrait
      * Scope: Has Upload
      *
      * @param  [type] $query   [description]
-     * @param  C4tech\Upload\Contracts\UploadInterface
+     * @param  C4tech\Upload\Contracts\UploadModelInterface
      * @return [type]          [description]
      */
-    public function scopeHasUpload($query, UploadInterface $upload)
+    public function scopeHasUpload($query, UploadModelInterface $upload)
     {
         return $query->whereHas('uploads', function ($sql) use ($upload) {
             return $sql->find($upload->id);

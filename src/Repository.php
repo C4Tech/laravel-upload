@@ -1,6 +1,7 @@
 <?php namespace C4tech\Upload;
 
 use C4tech\Support\Repository as BaseRepository;
+use C4tech\Upload\Contracts\UploadInterface;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -8,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
  *
  * Business logic for accessing Upload data.
  */
-class Repository extends BaseRepository
+class Repository extends BaseRepository implements UploadInterface
 {
     /**
      * @inheritDoc
@@ -25,10 +26,10 @@ class Repository extends BaseRepository
             $disk = $data['disk'];
         }
 
-        $path = $data['path'];
-        if (empty($path)) {
+        if (empty($data['path'])) {
             throw new Exception('A target file path must be defined');
         }
+        $path = $data['path'];
 
         if (empty($data['name'])) {
             $data['name'] = $path;
@@ -36,6 +37,7 @@ class Repository extends BaseRepository
 
         if (!empty($data['source'])) {
             $this->uploadFile($disk, $data['source'], $path);
+            unset($data['source']);
         }
 
         if (!$this->exists($disk, $path)) {
@@ -51,15 +53,36 @@ class Repository extends BaseRepository
     public function update($data = [])
     {
         $disk = $this->object->disk;
+        $path = $this->object->path;
+        $isNew = false;
 
         if (!empty($data['disk']) && $data['disk'] != $disk) {
-            $this->removeFile();
+            $contents = $this->removeFile();
             $disk = $data['disk'];
+            $isNew = true;
+
+            if (empty($data['source'])) {
+                $data['source'] = $contents;
+            }
+
+            unset($contents);
         }
 
-        $path = $data['path'] ?: $this->object->path;
+        if (!empty($data['path'])) {
+            $path = $data['path'];
+            $contents = $this->removeFile();
+
+            if (empty($data['source'])) {
+                $data['source'] = $contents;
+            }
+
+            unset($contents);
+        }
+
         if (!empty($data['source'])) {
-            $this->uploadFile($disk, $data['source'], $path, $path != $this->object->path);
+            $isNew = $isNew ?: $path != $this->object->path;
+            $this->uploadFile($disk, $data['source'], $path, $isNew);
+            unset($data['source']);
         }
 
         if (!$this->exists($disk, $path)) {
@@ -90,15 +113,23 @@ class Repository extends BaseRepository
 
     protected function removeFile($disk = null, $path = null)
     {
-        if (empty($disk)) {
+        if (is_null($disk)) {
             $disk = $this->object->disk;
         }
 
-        if (empty($path)) {
+        if (is_null($path)) {
             $path = $this->object->path;
         }
 
+        if (!$this->exists()) {
+            return null;
+        }
+
+        $contents = Storage::disk($disk)->get($path);
+
         Storage::disk($disk)->delete($path);
+
+        return $contents;
     }
 
     public function exists($disk = null, $path = null)

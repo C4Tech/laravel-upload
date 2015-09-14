@@ -16,7 +16,7 @@ trait RepositoryTrait
     /**
      * Listen to Upload
      *
-     * Observe Upload models for changes. Should be called from the boot() method.
+     * Observe Uploadable models for changes. Should be called from the boot() method.
      * @return void
      */
     protected function listenToUpload()
@@ -31,7 +31,7 @@ trait RepositoryTrait
 
         $flush = function ($upload) {
             foreach ($this->getWithUpload($upload) as $uploadable) {
-                $tags = [$this->formatTag($uploadable->getKey(), 'uploads')];
+                $tags = $uploadable->getTags('uploads');
 
                 if (Config::get('app.debug')) {
                     Log::debug(
@@ -49,21 +49,64 @@ trait RepositoryTrait
 
         $model::updated($flush);
         $model::deleted($flush);
+
+        $flush_morph = function ($upload) use ($model) {
+            $tags = $upload->getTags($model);
+
+            if (Config::get('app.debug')) {
+                Log::debug(
+                    'Flushing uploadable relationship caches',
+                    [
+                        'model' => $model,
+                        'tags' => $tags
+                    ]
+                );
+            }
+
+            Cache::tags($tags)->flush();
+        };
+
+        Upload::updated($flush_morph);
+        Upload::deleted($flush_morph);
+    }
+
+    /**
+     * With Upload
+     *
+     * Query for the Models that are linked to the given upload.
+     */
+    public function withUpload(UploadInterface $upload)
+    {
+        return $this->object->hasUpload($upload->getModel());
     }
 
     /**
      * Get With Upload
      *
-     * Find all of this Model that are linked to the upload.
+     * Find all of this Model class that are linked to the upload.
      * @param  C4tech\Upload\Contracts\UploadInterface
      * @return Illuminate\Support\Collection
      */
     public function getWithUpload(UploadInterface $upload)
     {
-        return $this->object->hasUpload($upload)
-            ->cacheTags([Upload::formatTag($upload->id, $this->getModelClass())])
-            ->remember(static::CACHE_SHORT)
-            ->get();
+        $model = $this->getModelClass();
+        return Cache::tags($upload->getTags($model))
+            ->remember(
+                $upload->getCacheId($model),
+                self::CACHE_SHORT,
+                function () use ($upload) {
+                    $objects = $this->withUpload($upload)
+                        ->get();
+
+                    if ($objects->count()) {
+                        $objects = $objects->map(function ($object) {
+                            return $this->make($object);
+                        });
+                    }
+
+                    return $objects;
+                }
+            );
     }
 
     /**
@@ -84,7 +127,7 @@ trait RepositoryTrait
      */
     public function getUploads()
     {
-        return Cache::tags($this->formatTag('uploads'))
+        return Cache::tags($this->getTags('uploads'))
             ->remember(
                 $this->getCacheId('uploads'),
                 self::CACHE_LONG,
@@ -93,7 +136,7 @@ trait RepositoryTrait
 
                     if ($uploads->count()) {
                         $uploads = $uploads->map(function ($upload) {
-                            return static::make($upload);
+                            return Upload::make($upload);
                         });
                     }
 
