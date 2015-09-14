@@ -24,7 +24,7 @@ class ModelTraitTest extends TestCase
             ->with('foundation.models.upload', $model)
             ->once()
             ->andReturn($model);
-        $this->verifyMorphToMany('uploads', $model, 'uploadable');
+        $this->verifyMorphMany('uploads', $model, 'uploadable');
     }
 
     public function testScopeHasUpload()

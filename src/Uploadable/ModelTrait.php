@@ -17,7 +17,7 @@ trait ModelTrait
      */
     public function uploads()
     {
-        return $this->morphToMany(Config::get('foundation.models.upload', 'C4tech\Upload\Model'), 'uploadable');
+        return $this->morphMany(Config::get('foundation.models.upload', 'C4tech\Upload\Model'), 'uploadable');
     }
 
     /**
