@@ -134,7 +134,7 @@ class Repository extends BaseRepository implements UploadInterface
         return $this->getDisk($disk)
             ->getDriver()
             ->getAdapter()
-            ->applyPathPrefix(getPath($path));
+            ->applyPathPrefix($this->getPath($path));
     }
 
     public function getMime($disk = null, $path = null)
