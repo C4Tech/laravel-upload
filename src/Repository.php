@@ -111,37 +111,52 @@ class Repository extends BaseRepository implements UploadInterface
         }
     }
 
-    protected function removeFile($disk = null, $path = null)
+    protected function removeFile()
     {
-        if (is_null($disk)) {
-            $disk = $this->object->disk;
-        }
-
-        if (is_null($path)) {
-            $path = $this->object->path;
-        }
-
         if (!$this->exists()) {
             return null;
         }
 
-        $contents = Storage::disk($disk)->get($path);
+        $contents = $this->getDisk()->get($this->getPath());
 
-        Storage::disk($disk)->delete($path);
+        $this->getDisk()->delete($this->getPath());
 
         return $contents;
     }
 
     public function exists($disk = null, $path = null)
     {
+        return $this->getDisk($disk)->exists($this->getPath($path));
+    }
+
+    public function getFilePath($disk = null, $path = null)
+    {
+        return $this->getDisk($disk)
+            ->getDriver()
+            ->getAdapter()
+            ->applyPathPrefix(getPath($path));
+    }
+
+    public function getMime($disk = null, $path = null)
+    {
+        return $this->getDisk($disk)->mimeType($this->getPath($path));
+    }
+
+    protected function getDisk($disk = null)
+    {
         if (empty($disk)) {
             $disk = $this->object->disk;
         }
 
+        return Storage::disk($disk);
+    }
+
+    protected function getPath($path = null)
+    {
         if (empty($path)) {
             $path = $this->object->path;
         }
 
-        return Storage::disk($disk)->exists($path);
+        return $path;
     }
 }
