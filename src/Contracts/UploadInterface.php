@@ -1,6 +1,8 @@
 <?php namespace C4tech\Upload\Contracts;
 
-interface UploadInterface
+use C4tech\Support\Contracts\ResourceInterface;
+
+interface UploadInterface extends ResourceInterface
 {
     // Nothing
 }

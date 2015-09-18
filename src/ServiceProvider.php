@@ -1,6 +1,7 @@
 <?php namespace C4tech\Upload;
 
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
@@ -31,7 +32,8 @@ class ServiceProvider extends BaseServiceProvider
         App::singleton(
             'c4tech.upload',
             function () {
-                return new Repository;
+                $repo = Config::get('foundation.repos.upload', 'C4tech\Upload\Repository');
+                return new $repo;
             }
         );
     }

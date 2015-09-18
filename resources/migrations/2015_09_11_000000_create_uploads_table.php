@@ -15,6 +15,7 @@ class CreateUploadsTable extends Migration
             $table->string('name');
             $table->string('disk')->nullable();
             $table->string('path');
+            $table->morphs('uploadable');
             $table->timestamps();
         });
     }

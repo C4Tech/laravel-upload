@@ -19,7 +19,7 @@ class Repository extends BaseRepository implements UploadInterface
     /**
      * @inheritDoc
      */
-    public function create($data = [])
+    public function create(array $data = [])
     {
         $disk = null;
         if (!empty($data['disk'])) {
@@ -50,7 +50,7 @@ class Repository extends BaseRepository implements UploadInterface
     /**
      * @inheritDoc
      */
-    public function update($data = [])
+    public function update(array $data = [])
     {
         $disk = $this->object->disk;
         $path = $this->object->path;

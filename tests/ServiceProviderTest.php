@@ -53,6 +53,11 @@ class AddressServiceProviderTest extends TestCase
             ->twice()
             ->andReturn('C4tech\Upload\Model');
 
+        Config::shouldReceive('get')
+            ->with('foundation.repos.upload', 'C4tech\Upload\Repository')
+            ->once()
+            ->andReturn('C4tech\Upload\Repository');
+
         App::shouldReceive('singleton')
             ->with(
                 'c4tech.upload',

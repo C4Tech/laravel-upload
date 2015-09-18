@@ -1,6 +1,8 @@
 <?php namespace C4tech\Upload\Contracts;
 
-interface UploadableModelInterface
+use C4tech\Support\Contracts\ModelInterface;
+
+interface UploadableModelInterface extends ModelInterface
 {
     /**
      * Scope: Has Upload
