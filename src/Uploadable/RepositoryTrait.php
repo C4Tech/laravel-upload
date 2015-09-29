@@ -2,6 +2,7 @@
 
 use C4tech\Upload\Contracts\UploadInterface;
 use C4tech\Upload\Facade as Upload;
+use C4tech\Upload\Model as UploadModel;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -66,8 +67,8 @@ trait RepositoryTrait
             Cache::tags($tags)->flush();
         };
 
-        Upload::updated($flush_morph);
-        Upload::deleted($flush_morph);
+        UploadModel::updated($flush_morph);
+        UploadModel::deleted($flush_morph);
     }
 
     /**

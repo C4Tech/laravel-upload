@@ -37,7 +37,7 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "http://git.c4tech.com/laravel/foundation.git"
+            "url": "https://bitbucket.org/c4apps/laravel-foundation.git"
         }
     ],
     "minimum-stability": "stable"
