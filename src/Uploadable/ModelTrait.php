@@ -30,7 +30,7 @@ trait ModelTrait
     public function scopeHasUpload($query, UploadModelInterface $upload)
     {
         return $query->whereHas('uploads', function ($sql) use ($upload) {
-            return $sql->find($upload->id);
+            return $sql->where($upload->getKeyName(), 'id', $upload->id);
         });
     }
 }
