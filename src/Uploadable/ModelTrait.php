@@ -2,6 +2,7 @@
 
 use C4tech\Upload\Contracts\UploadModelInterface;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Uploadable Model Trait
@@ -30,7 +31,9 @@ trait ModelTrait
     public function scopeHasUpload($query, UploadModelInterface $upload)
     {
         return $query->whereHas('uploads', function ($sql) use ($upload) {
-            return $sql->where($upload->getKeyName(), 'id', $upload->id);
+            return $sql->find($upload->id);
         });
+
+        Log::debug($query->toSql());
     }
 }

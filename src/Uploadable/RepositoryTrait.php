@@ -30,62 +30,51 @@ trait RepositoryTrait
             Log::debug('Binding upload relationship caches', ['uploadable' => $model]);
         }
 
-        $flush = function ($upload_model) {
-            $upload = Upload::make($upload_model);
-
-            foreach ($this->getWithUpload($upload) as $uploadable) {
-                $tags = $uploadable->getTags('uploads');
-
-                if (Config::get('app.debug')) {
-                    Log::debug(
-                        'Flushing uploadable relationship caches',
-                        [
-                            'uploadable' => $uploadable->id,
-                            'tags' => $tags
-                        ]
-                    );
-                }
-
-                Cache::tags($tags)->flush();
-            }
-
-            $model_tags = $upload->getTags($model);
+        $flush_model = function ($uploadable) {
+            $repository = $this->make($uploadable);
+            $tags = $repository->getTags('uploads');
 
             if (Config::get('app.debug')) {
                 Log::debug(
-                    'Flushing upload relationship caches',
+                    'Flushing uploadable relationship caches',
                     [
-                        'model' => $model,
-                        'tags' => $model_tags
+                        'uploadable' => $repository->id,
+                        'tags' => $tags
                     ]
                 );
             }
 
-            Cache::tags($model_tags)->flush();
+            Cache::tags($tags)->flush();
         };
 
-        UploadModel::updated($flush);
-        UploadModel::deleted($flush);
+        $model::updated($flush_model);
+        $model::deleted($flush_model);
+
+        $flush_upload = function ($upload_model) use ($model) {
+            $upload = Upload::make($upload_model);
+            $tags = $upload->getTags($model);
+
+            if (Config::get('app.debug')) {
+                Log::debug(
+                    'Flushing inverse upload relationship caches',
+                    [
+                        'model' => $model,
+                        'tags' => $tags
+                    ]
+                );
+            }
+
+            Cache::tags($tags)->flush();
+        };
+
+        UploadModel::updated($flush_upload);
+        UploadModel::deleted($flush_upload);
     }
 
     /**
-     * With Upload
-     *
-     * Query for the Models that are linked to the given upload.
+     * @inheritDoc
      */
     public function withUpload(UploadInterface $upload)
-    {
-        return $this->object->newQuery()->hasUpload($upload->getModel());
-    }
-
-    /**
-     * Get With Upload
-     *
-     * Find all of this Model class that are linked to the upload.
-     * @param  C4tech\Upload\Contracts\UploadInterface
-     * @return Illuminate\Support\Collection
-     */
-    public function getWithUpload(UploadInterface $upload)
     {
         $model = $this->getModelClass();
         return Cache::tags($upload->getTags($model))
@@ -93,7 +82,7 @@ trait RepositoryTrait
                 $upload->getCacheId($model),
                 self::CACHE_SHORT,
                 function () use ($upload) {
-                    $objects = $this->withUpload($upload)
+                    $objects = $this->object->hasUpload($upload->getModel())
                         ->get();
 
                     if ($objects->count()) {
