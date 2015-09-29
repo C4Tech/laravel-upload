@@ -52,7 +52,7 @@ trait RepositoryTrait
         $model::deleted($flush);
 
         $flush_morph = function ($upload) use ($model) {
-            $tags = $upload->getTags($model);
+            $tags = Upload::make($upload)->getTags($model);
 
             if (Config::get('app.debug')) {
                 Log::debug(
