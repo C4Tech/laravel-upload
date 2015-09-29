@@ -36,7 +36,7 @@ trait RepositoryTrait
 
                 if (Config::get('app.debug')) {
                     Log::debug(
-                        'Flushing upload relationship caches',
+                        'Flushing uploadable relationship caches',
                         [
                             'uploadable' => $uploadable->id,
                             'tags' => $tags
@@ -46,29 +46,24 @@ trait RepositoryTrait
 
                 Cache::tags($tags)->flush();
             }
-        };
 
-        $model::updated($flush);
-        $model::deleted($flush);
-
-        $flush_morph = function ($upload) use ($model) {
-            $tags = Upload::make($upload)->getTags($model);
+            $model_tags = Upload::make($upload)->getTags($model);
 
             if (Config::get('app.debug')) {
                 Log::debug(
-                    'Flushing uploadable relationship caches',
+                    'Flushing upload relationship caches',
                     [
                         'model' => $model,
-                        'tags' => $tags
+                        'tags' => $model_tags
                     ]
                 );
             }
 
-            Cache::tags($tags)->flush();
+            Cache::tags($model_tags)->flush();
         };
 
-        UploadModel::updated($flush_morph);
-        UploadModel::deleted($flush_morph);
+        UploadModel::updated($flush);
+        UploadModel::deleted($flush);
     }
 
     /**
