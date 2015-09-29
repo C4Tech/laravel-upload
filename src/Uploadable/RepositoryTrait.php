@@ -30,7 +30,9 @@ trait RepositoryTrait
             Log::debug('Binding upload relationship caches', ['uploadable' => $model]);
         }
 
-        $flush = function ($upload) {
+        $flush = function ($upload_model) {
+            $upload = Upload::make($upload_model);
+
             foreach ($this->getWithUpload($upload) as $uploadable) {
                 $tags = $uploadable->getTags('uploads');
 
@@ -47,7 +49,7 @@ trait RepositoryTrait
                 Cache::tags($tags)->flush();
             }
 
-            $model_tags = Upload::make($upload)->getTags($model);
+            $model_tags = $upload->getTags($model);
 
             if (Config::get('app.debug')) {
                 Log::debug(
