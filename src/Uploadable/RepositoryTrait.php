@@ -75,7 +75,7 @@ trait RepositoryTrait
      */
     public function withUpload(UploadInterface $upload)
     {
-        return $this->object->hasUpload($upload->getModel());
+        return $this->object->newQuery()->hasUpload($upload->getModel());
     }
 
     /**
