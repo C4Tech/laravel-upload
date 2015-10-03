@@ -387,9 +387,6 @@ class RepositoryTest extends TestCase
 
     public function testRemoveDoesntExist()
     {
-        $this->mocked_model->disk = 'old-disk';
-        $this->mocked_model->path = 'path/to/old';
-
         $this->repo->shouldReceive('exists')
             ->withNoArgs()
             ->once()
@@ -398,12 +395,9 @@ class RepositoryTest extends TestCase
         expect($this->repo->removeFile())->null();
     }
 
-    public function testRemoveDefaults()
+    public function testRemoveExists()
     {
-        $disk = 'old-disk';
-        $this->mocked_model->disk = $disk;
         $path = 'path/to/old';
-        $this->mocked_model->path = $path;
         $contents = 'contents';
 
         $this->repo->shouldReceive('exists')
@@ -411,57 +405,37 @@ class RepositoryTest extends TestCase
             ->once()
             ->andReturn(true);
 
+        $this->repo->shouldReceive('getPath')
+            ->withNoArgs()
+            ->twice()
+            ->andReturn($path);
+
         Storage::shouldReceive('disk->get')
-            ->with($disk)
+            ->withNoArgs()
             ->with($path)
             ->once()
             ->andReturn($contents);
 
         Storage::shouldReceive('disk->delete')
-            ->with($disk)
+            ->withNoArgs()
             ->with($path)
             ->once();
 
         expect($this->repo->removeFile())->equals($contents);
     }
 
-    public function testRemoveSpecified()
-    {
-        $disk = 'given-disk';
-        $this->mocked_model->disk = 'old-disk';
-        $path = 'path/to/given';
-        $this->mocked_model->path = 'path/to/old';
-        $contents = 'contents';
-
-        $this->repo->shouldReceive('exists')
-            ->withNoArgs()
-            ->once()
-            ->andReturn(true);
-
-        Storage::shouldReceive('disk->get')
-            ->with($disk)
-            ->with($path)
-            ->once()
-            ->andReturn($contents);
-
-        Storage::shouldReceive('disk->delete')
-            ->with($disk)
-            ->with($path)
-            ->once();
-
-        expect($this->repo->removeFile($disk, $path))->equals($contents);
-    }
-
     public function testExistsDefaults()
     {
-        $disk = 'old-disk';
-        $this->mocked_model->disk = $disk;
         $path = 'path/to/old';
-        $this->mocked_model->path = $path;
         $return = true;
 
-        Storage::shouldReceive('disk->exists')
-            ->with($disk)
+        $this->repo->shouldReceive('getPath')
+            ->with(null)
+            ->once()
+            ->andReturn($path);
+
+        $this->repo->shouldReceive('getDisk->exists')
+            ->with(null)
             ->with($path)
             ->once()
             ->andReturn($return);
@@ -472,17 +446,142 @@ class RepositoryTest extends TestCase
     public function testExistsSpecified()
     {
         $disk = 'given-disk';
-        $this->mocked_model->disk = 'old-disk';
         $path = 'path/to/given';
-        $this->mocked_model->path = 'path/to/old';
         $return = false;
 
-        Storage::shouldReceive('disk->exists')
+        $this->repo->shouldReceive('getPath')
+            ->with($path)
+            ->once()
+            ->andReturn($path);
+
+        $this->repo->shouldReceive('getDisk->exists')
             ->with($disk)
             ->with($path)
             ->once()
             ->andReturn($return);
 
         expect($this->repo->exists($disk, $path))->equals($return);
+    }
+
+    public function testGetFilePathDefaults()
+    {
+        $path = 'path';
+        $real_path = '/real/path';
+
+        $this->repo->shouldReceive('getPath')
+            ->with(null)
+            ->once()
+            ->andReturn($path);
+
+        $this->repo->shouldReceive('getDisk->getDriver->getAdapter->applyPathPrefix')
+            ->with(null)
+            ->withNoArgs()
+            ->withNoArgs()
+            ->with($path)
+            ->once()
+            ->andReturn($real_path);
+
+        expect($this->repo->getFilePath())->equals($real_path);
+    }
+
+    public function testGetFilePathSpecified()
+    {
+        $disk = 'disk';
+        $path = 'path';
+        $real_path = '/real/path';
+
+        $this->repo->shouldReceive('getPath')
+            ->with($path)
+            ->once()
+            ->andReturn($path);
+
+        $this->repo->shouldReceive('getDisk->getDriver->getAdapter->applyPathPrefix')
+            ->with($disk)
+            ->withNoArgs()
+            ->withNoArgs()
+            ->with($path)
+            ->once()
+            ->andReturn($real_path);
+
+        expect($this->repo->getFilePath($disk, $path))->equals($real_path);
+    }
+
+    public function testGetMimeDefaults()
+    {
+        $path = 'path';
+        $mime = 'meme/cat';
+
+        $this->repo->shouldReceive('getPath')
+            ->with(null)
+            ->once()
+            ->andReturn($path);
+
+        $this->repo->shouldReceive('getDisk->mimeType')
+            ->with(null)
+            ->with($path)
+            ->once()
+            ->andReturn($mime);
+
+        expect($this->repo->getMime())->equals($mime);
+    }
+
+    public function testGetMimeSpecified()
+    {
+        $disk = 'disk';
+        $path = 'path';
+        $mime = 'meme/rage';
+
+        $this->repo->shouldReceive('getPath')
+            ->with($path)
+            ->once()
+            ->andReturn($path);
+
+        $this->repo->shouldReceive('getDisk->mimeType')
+            ->with($disk)
+            ->with($path)
+            ->once()
+            ->andReturn($mime);
+
+        expect($this->repo->getMime($disk, $path))->equals($mime);
+    }
+
+    public function testGetDiskDefaults()
+    {
+        $disk = $this->mocked_model->disk = 'somewhere';
+        $result = 'magic';
+
+        Storage::shouldReceive('disk')
+            ->with($disk)
+            ->once()
+            ->andReturn($result);
+
+        expect($this->repo->getDisk())->equals($result);
+    }
+
+    public function testGetDiskSpecified()
+    {
+        $disk = 'disk';
+        $result = 'magic';
+
+        Storage::shouldReceive('disk')
+            ->with($disk)
+            ->once()
+            ->andReturn($result);
+
+        expect($this->repo->getDisk($disk))->equals($result);
+    }
+
+    public function testGetPathDefaults()
+    {
+        $path = $this->mocked_model->path = 'path';
+
+        expect($this->repo->getPath())->equals($path);
+    }
+
+    public function testGetPathSpecified()
+    {
+        $path = 'path';
+
+        expect($this->repo->getPath($path))->equals($path);
     }
 }
