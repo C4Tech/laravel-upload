@@ -35,7 +35,7 @@ trait RepositoryTrait
             $tags = $repository->getTags('uploads');
 
             if (Config::get('app.debug')) {
-                Log::info(
+                Log::debug(
                     'Flushing uploadable relationship caches',
                     [
                         'uploadable' => $repository->id,
@@ -55,7 +55,7 @@ trait RepositoryTrait
             $tags = $repository->getTags($model);
 
             if (Config::get('app.debug')) {
-                Log::info(
+                Log::debug(
                     'Flushing upload relationship caches',
                     [
                         'model' => $model,

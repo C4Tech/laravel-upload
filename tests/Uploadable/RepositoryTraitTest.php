@@ -90,7 +90,11 @@ class RepositoryTraitTest extends TestCase
     public function testListenToUploadUploadableClosure()
     {
         $model = Mockery::mock('UploadableModel');
+        $repository = Mockery::mock('C4tech\Upload\Contracts\UploadableInterface');
+        $repository->id = 16;
+        $tags = ['tags'];
         $upload = Mockery::mock('UploadInstance');
+        $uploadable = Mockery::mock('C4tech\Upload\Contracts\UploadableModelInterface');
 
         $this->repo->shouldReceive('getModelClass')
             ->withNoArgs()
@@ -98,43 +102,36 @@ class RepositoryTraitTest extends TestCase
             ->andReturn($model);
 
         Config::shouldReceive('get')
-            ->byDefault()
-            ->andReturn(false);
+            ->with('app.debug')
+            ->twice()
+            ->andReturn(true);
+
+        Log::shouldReceive('debug')
+            ->with(Mockery::type('string'), Mockery::type('array'))
+            ->twice();
 
         $model->shouldReceive('updated');
         $model->shouldReceive('deleted')
-            ->with(Mockery::on(function ($closure) {
-                $tags = ['tags'];
-                $repository = Mockery::mock('C4tech\Upload\Contracts\UploadableInterface');
-                $repository->id = 16;
-                $uploadable = Mockery::mock('C4tech\Upload\Contracts\UploadableModelInterface');
-
-                $this->repo->shouldReceive('make')
-                    ->with($uploadable)
-                    ->once()
-                    ->andReturn($repository);
-
-                $repository->shouldReceive('getTags')
-                    ->with('uploads')
-                    ->once()
-                    ->andReturn($tags);
-
-                Config::shouldReceive('get')
-                    ->with('app.debug')
-                    ->andReturn(true);
-
-                Log::shouldReceive('debug')
-                    ->with(Mockery::type('string'), Mockery::type('array'));
-
-                Cache::shouldReceive('tags->flush')
-                    ->with($tags)
-                    ->withNoArgs()
-                    ->once();
-
+            ->with(Mockery::on(function ($closure) use ($uploadable) {
                 expect_not($closure($uploadable));
 
                 return true;
             }));
+
+        $this->repo->shouldReceive('make')
+            ->with($uploadable)
+            ->once()
+            ->andReturn($repository);
+
+        $repository->shouldReceive('getTags')
+            ->with('uploads')
+            ->once()
+            ->andReturn($tags);
+
+        Cache::shouldReceive('tags->flush')
+            ->with($tags)
+            ->withNoArgs()
+            ->once();
 
         Upload::shouldReceive('getModelClass')
             ->withNoArgs()
@@ -143,6 +140,72 @@ class RepositoryTraitTest extends TestCase
 
         $upload->shouldReceive('updated');
         $upload->shouldReceive('deleted');
+
+        expect_not($this->repo->listenToUpload());
+    }
+
+    public function testListenToUploadModelClosure()
+    {
+        $model = Mockery::mock('UploadableModel');
+        $repository = Mockery::mock('C4tech\Upload\Contracts\UploadInterface');
+        $repository->id = 16;
+        $tags = ['tags'];
+        $upload = Mockery::mock('UploadInstance');
+        $uploadable = Mockery::mock('C4tech\Upload\Contracts\UploadableModelInterface');
+
+        $this->repo->shouldReceive('getModelClass')
+            ->withNoArgs()
+            ->once()
+            ->andReturn($model);
+
+        Config::shouldReceive('get')
+            ->with('app.debug')
+            ->twice()
+            ->andReturn(true);
+
+        Log::shouldReceive('debug')
+            ->with(Mockery::type('string'), Mockery::type('array'))
+            ->twice();
+
+        $model->shouldReceive('updated');
+        $model->shouldReceive('deleted');
+
+        Upload::shouldReceive('getModelClass')
+            ->withNoArgs()
+            ->once()
+            ->andReturn($upload);
+
+        $upload->shouldReceive('updated');
+        $upload->shouldReceive('deleted')
+            ->with(Mockery::on(function ($closure) use ($upload) {
+                expect_not($closure($upload));
+
+                return true;
+            }));
+
+        Upload::shouldReceive('make')
+            ->with($upload)
+            ->once()
+            ->andReturn($repository);
+
+        $repository->shouldReceive('getTags')
+            ->with($model)
+            ->once()
+            ->andReturn($tags);
+
+        Cache::shouldReceive('tags->flush')
+            ->with($tags)
+            ->withNoArgs()
+            ->once();
+
+        $this->repo->shouldReceive('withUpload')
+            ->with($repository)
+            ->once()
+            ->andreturn([$uploadable]);
+
+        $uploadable->shouldReceive('touch')
+            ->withNoArgs()
+            ->once();
 
         expect_not($this->repo->listenToUpload());
     }
