@@ -203,7 +203,7 @@ class RepositoryTraitTest extends TestCase
             ->once()
             ->andreturn([$uploadable]);
 
-        $uploadable->shouldReceive('touch')
+        $uploadable->shouldReceive('getModel->touch')
             ->withNoArgs()
             ->once();
 

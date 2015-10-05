@@ -31,18 +31,27 @@ class ModelTraitTest extends TestCase
     public function testScopeHasUpload()
     {
         $right = Mockery::mock('C4tech\Upload\Model')->makePartial();
-        $right->id = 10;
+        $right->shouldReceive('getQualifiedKeyName')
+            ->withNoArgs()
+            ->once()
+            ->andReturn('keyname');
+
+        $right->shouldReceive('getKey')
+            ->withNoArgs()
+            ->once()
+            ->andReturn('key');
+
+        $sql = $this->getQueryMock();
+        $sql->shouldReceive('where')
+            ->with('keyname', '=', 'key')
+            ->once()
+            ->andReturn(true);
+
         $query = $this->getQueryMock();
         $query->shouldReceive('whereHas')
             ->with(
                 'uploads',
-                Mockery::on(function ($closure) use ($right) {
-                    $sql = $this->getQueryMock();
-                    $sql->shouldReceive('find')
-                        ->with($right->id)
-                        ->once()
-                        ->andReturn(true);
-
+                Mockery::on(function ($closure) use ($right, $sql) {
                     expect($closure($sql))->true();
                     return true;
                 })

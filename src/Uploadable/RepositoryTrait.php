@@ -5,6 +5,7 @@ use C4tech\Upload\Facade as Upload;
 use C4tech\Upload\Model as UploadModel;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -67,7 +68,7 @@ trait RepositoryTrait
             Cache::tags($tags)->flush();
 
             foreach ($this->withUpload($repository) as $uploadable) {
-                $uploadable->touch();
+                $uploadable->getModel()->touch();
             }
         };
 
@@ -86,7 +87,7 @@ trait RepositoryTrait
             ->remember(
                 $upload->getCacheId($model),
                 self::CACHE_SHORT,
-                function () use ($upload) {
+                function () use ($upload, $model) {
                     $objects = $this->object->hasUpload($upload->getModel())
                         ->get();
 
