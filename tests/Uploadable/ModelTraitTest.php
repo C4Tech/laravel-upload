@@ -1,6 +1,7 @@
 <?php namespace C4tech\Test\Upload\Uploadable;
 
 use C4tech\Support\Test\Model as TestCase;
+use C4tech\Upload\Facade as Upload;
 use Illuminate\Support\Facades\Config;
 use Mockery;
 
@@ -13,15 +14,15 @@ class ModelTraitTest extends TestCase
 
     public function tearDown()
     {
-        Config::clearResolvedInstances();
+        Upload::clearResolvedInstances();
         parent::tearDown();
     }
 
     public function testUploads()
     {
         $model = 'C4tech\Upload\Model';
-        Config::shouldReceive('get')
-            ->with('foundation.models.upload', $model)
+        Upload::shouldReceive('getModelClass')
+            ->withNoArgs()
             ->once()
             ->andReturn($model);
         $this->verifyMorphMany('uploads', $model, 'uploadable');

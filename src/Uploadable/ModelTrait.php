@@ -1,6 +1,7 @@
 <?php namespace C4tech\Upload\Uploadable;
 
 use C4tech\Upload\Contracts\UploadModelInterface;
+use C4tech\Upload\Facade as Upload;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 
@@ -18,7 +19,7 @@ trait ModelTrait
      */
     public function uploads()
     {
-        return $this->morphMany(Config::get('foundation.models.upload', 'C4tech\Upload\Model'), 'uploadable');
+        return $this->morphMany(Upload::getModelClass(), 'uploadable');
     }
 
     /**

@@ -30,12 +30,12 @@ trait RepositoryTrait
             Log::debug('Binding upload relationship caches', ['uploadable' => $model]);
         }
 
-        $flush_model = function ($uploadable) {
+        $flush_uploadable = function ($uploadable) {
             $repository = $this->make($uploadable);
             $tags = $repository->getTags('uploads');
 
             if (Config::get('app.debug')) {
-                Log::debug(
+                Log::info(
                     'Flushing uploadable relationship caches',
                     [
                         'uploadable' => $repository->id,
@@ -47,16 +47,16 @@ trait RepositoryTrait
             Cache::tags($tags)->flush();
         };
 
-        $model::updated($flush_model);
-        $model::deleted($flush_model);
+        $model::updated($flush_uploadable);
+        $model::deleted($flush_uploadable);
 
-        $flush_upload = function ($upload_model) use ($model) {
-            $upload = Upload::make($upload_model);
-            $tags = $upload->getTags($model);
+        $flush_upload = function ($upload) use ($model) {
+            $repository = Upload::make($upload);
+            $tags = $repository->getTags($model);
 
             if (Config::get('app.debug')) {
-                Log::debug(
-                    'Flushing inverse upload relationship caches',
+                Log::info(
+                    'Flushing upload relationship caches',
                     [
                         'model' => $model,
                         'tags' => $tags
@@ -65,10 +65,15 @@ trait RepositoryTrait
             }
 
             Cache::tags($tags)->flush();
+
+            foreach ($this->withUpload($repository) as $uploadable) {
+                $uploadable->touch();
+            }
         };
 
-        UploadModel::updated($flush_upload);
-        UploadModel::deleted($flush_upload);
+        $upload_model = Upload::getModelClass();
+        $upload_model::updated($flush_upload);
+        $upload_model::deleted($flush_upload);
     }
 
     /**

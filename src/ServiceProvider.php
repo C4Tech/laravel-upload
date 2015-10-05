@@ -32,7 +32,8 @@ class ServiceProvider extends BaseServiceProvider
         App::singleton(
             'c4tech.upload',
             function () {
-                $repo = Config::get('foundation.repos.upload', 'C4tech\Upload\Repository');
+                $repo = Config::get('upload.repos.upload', 'C4tech\Upload\Repository');
+                $repo = Config::get('foundation.repos.upload', $repo);
                 return new $repo;
             }
         );

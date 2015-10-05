@@ -2,13 +2,12 @@
 
 use C4tech\Upload\Facade as Upload;
 use C4tech\Upload\Repository;
-use C4tech\Address\Contracts\StateInterface;
 use C4tech\Support\Test\Base as TestCase;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Mockery;
 
-class AddressServiceProviderTest extends TestCase
+class ServiceProviderTest extends TestCase
 {
     public function setUp()
     {
@@ -48,15 +47,16 @@ class AddressServiceProviderTest extends TestCase
 
     public function testRegister()
     {
+        $repo = '\stdClass';
         Config::shouldReceive('get')
-            ->with('foundation.models.upload', 'foundation.models.upload')
-            ->twice()
-            ->andReturn('C4tech\Upload\Model');
+            ->with('upload.repos.upload', 'C4tech\Upload\Repository')
+            ->once()
+            ->andReturn($repo);
 
         Config::shouldReceive('get')
-            ->with('foundation.repos.upload', 'C4tech\Upload\Repository')
+            ->with('foundation.repos.upload', $repo)
             ->once()
-            ->andReturn('C4tech\Upload\Repository');
+            ->andReturn($repo);
 
         App::shouldReceive('singleton')
             ->with(
@@ -65,7 +65,35 @@ class AddressServiceProviderTest extends TestCase
                     $result = $closure();
                     expect_that($result);
                     expect(is_object($result))->true();
-                    expect($result instanceof Repository)->true();
+                    expect($result instanceof \stdClass)->true();
+                    return true;
+                })
+            )->once();
+
+        expect_not($this->provider->register());
+    }
+
+    public function testRegisterFoundation()
+    {
+        $repo = '\stdClass';
+        Config::shouldReceive('get')
+            ->with('upload.repos.upload', 'C4tech\Upload\Repository')
+            ->once()
+            ->andReturn('App\Model');
+
+        Config::shouldReceive('get')
+            ->with('foundation.repos.upload', 'App\Model')
+            ->once()
+            ->andReturn($repo);
+
+        App::shouldReceive('singleton')
+            ->with(
+                'c4tech.upload',
+                Mockery::on(function ($closure) {
+                    $result = $closure();
+                    expect_that($result);
+                    expect(is_object($result))->true();
+                    expect($result instanceof \stdClass)->true();
                     return true;
                 })
             )->once();

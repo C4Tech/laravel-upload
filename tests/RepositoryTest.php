@@ -2,6 +2,7 @@
 
 use C4tech\Support\Test\Repository as TestCase;
 use Exception;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 use Mockery;
 
@@ -16,8 +17,41 @@ class RepositoryTest extends TestCase
 
     public function tearDown()
     {
+        Config::clearResolvedInstances();
         Storage::clearResolvedInstances();
         parent::tearDown();
+    }
+
+    public function testGetModelClass()
+    {
+        $class = 'C4tech\Magic';
+        Config::shouldReceive('get')
+            ->with('upload.models.upload', 'upload.models.upload')
+            ->once()
+            ->andReturn($class);
+
+        Config::shouldReceive('get')
+            ->with('foundation.models.upload', $class)
+            ->once()
+            ->andReturn($class);
+
+        expect($this->repo->getModelClass())->equals($class);
+    }
+
+    public function testGetModelClassFoundation()
+    {
+        $class = 'C4tech\Magic';
+        Config::shouldReceive('get')
+            ->with('upload.models.upload', 'upload.models.upload')
+            ->once()
+            ->andReturn('C4tech\Silly');
+
+        Config::shouldReceive('get')
+            ->with('foundation.models.upload', 'C4tech\Silly')
+            ->once()
+            ->andReturn($class);
+
+        expect($this->repo->getModelClass())->equals($class);
     }
 
     /**

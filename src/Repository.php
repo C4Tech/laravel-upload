@@ -3,6 +3,7 @@
 use C4tech\Support\Repository as BaseRepository;
 use C4tech\Upload\Contracts\UploadInterface;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Config;
 
 /**
  * Upload Repository
@@ -14,7 +15,16 @@ class Repository extends BaseRepository implements UploadInterface
     /**
      * @inheritDoc
      */
-    protected static $model = 'foundation.models.upload';
+    protected static $model = '.models.upload';
+
+    /**
+     * @inheritDoc
+     */
+    public function getModelClass()
+    {
+        $class = Config::get('upload' . static::$model, 'upload' . static::$model);
+        return Config::get('foundation' . static::$model, $class);
+    }
 
     /**
      * @inheritDoc

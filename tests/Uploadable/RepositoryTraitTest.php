@@ -47,10 +47,9 @@ class RepositoryTraitTest extends TestCase
         expect_not($this->repo->listenToUpload());
     }
 
-    public function testListenToUploadDebug()
+    public function testListenToUploadTriggers()
     {
-        $model = Mockery::mock('C4tech\Upload\Model')
-            ->makePartial();
+        $model = Mockery::mock('Uploadable');
         $model->shouldReceive('updated')
             ->with(Mockery::type('callable'))
             ->once();
@@ -72,127 +71,95 @@ class RepositoryTraitTest extends TestCase
             ->with(Mockery::type('string'), Mockery::type('array'))
             ->once();
 
-        Upload::shouldReceive('updated')
+        $upload = Mockery::mock('Upload');
+        $upload->shouldReceive('updated')
             ->with(Mockery::type('callable'))
             ->once();
-        Upload::shouldReceive('deleted')
+        $upload->shouldReceive('deleted')
             ->with(Mockery::type('callable'))
             ->once();
+
+        Upload::shouldReceive('getModelClass')
+            ->withNoArgs()
+            ->once()
+            ->andReturn($upload);
 
         expect_not($this->repo->listenToUpload());
     }
 
-    public function testListenToUploadClosure()
+    public function testListenToUploadUploadableClosure()
     {
-        Config::shouldReceive('get')
-            ->with('app.debug')
-            ->times(3)
-            ->andReturn(false, true, true);
-
-        Log::shouldReceive('debug')
-            ->with(Mockery::type('string'), Mockery::type('array'))
-            ->twice();
-
-
-        $tag = 'test-tag';
-        $uploadable = Mockery::mock('C4tech\Upload\Contracts\UploadableInterface[getTags]');
-        $uploadable->id = 28;
-
-        $uploadable->shouldReceive('getTags')
-            ->with('uploads')
-            ->once()
-            ->andReturn([$tag]);
-
-        Cache::shouldReceive('tags->flush')
-            ->with([$tag])
-            ->withNoArgs()
-            ->once();
-
-        $mock_upload = Mockery::mock('C4tech\Upload\Contracts\UploadInterface');
-
-        $model = Mockery::mock('C4tech\Upload\Model[updated,deleted]');
-        $model->shouldReceive('updated')
-            ->with(Mockery::type('callable'))
-            ->once();
-        $model->shouldReceive('deleted')
-            ->with(
-                Mockery::on(function ($closure) use ($mock_upload) {
-                    expect_not($closure($mock_upload));
-
-                    return true;
-                })
-            )
-            ->once();
-
-        $this->repo->shouldReceive('getWithUpload')
-            ->with($mock_upload)
-            ->once()
-            ->andReturn([$uploadable]);
-
-        $morph_tag = 'test-morph';
-        $upload = Mockery::mock('C4tech\Upload\Contracts\UploadInterface[getTags]');
-
-        $upload->shouldReceive('getTags')
-            ->with($model)
-            ->once()
-            ->andReturn([$morph_tag]);
-
-        Cache::shouldReceive('tags->flush')
-            ->with([$morph_tag])
-            ->withNoArgs()
-            ->once();
-
-        Upload::shouldReceive('updated')
-            ->with(Mockery::type('callable'))
-            ->once();
-        Upload::shouldReceive('deleted')
-            ->with(
-                Mockery::on(function ($closure) use ($upload) {
-                    expect_not($closure($upload));
-                    return true;
-                })
-            )
-            ->once();
+        $model = Mockery::mock('UploadableModel');
+        $upload = Mockery::mock('UploadInstance');
 
         $this->repo->shouldReceive('getModelClass')
             ->withNoArgs()
             ->once()
             ->andReturn($model);
 
+        Config::shouldReceive('get')
+            ->byDefault()
+            ->andReturn(false);
+
+        $model->shouldReceive('updated');
+        $model->shouldReceive('deleted')
+            ->with(Mockery::on(function ($closure) {
+                $tags = ['tags'];
+                $repository = Mockery::mock('C4tech\Upload\Contracts\UploadableInterface');
+                $repository->id = 16;
+                $uploadable = Mockery::mock('C4tech\Upload\Contracts\UploadableModelInterface');
+
+                $this->repo->shouldReceive('make')
+                    ->with($uploadable)
+                    ->once()
+                    ->andReturn($repository);
+
+                $repository->shouldReceive('getTags')
+                    ->with('uploads')
+                    ->once()
+                    ->andReturn($tags);
+
+                Config::shouldReceive('get')
+                    ->with('app.debug')
+                    ->andReturn(true);
+
+                Log::shouldReceive('debug')
+                    ->with(Mockery::type('string'), Mockery::type('array'));
+
+                Cache::shouldReceive('tags->flush')
+                    ->with($tags)
+                    ->withNoArgs()
+                    ->once();
+
+                expect_not($closure($uploadable));
+
+                return true;
+            }));
+
+        Upload::shouldReceive('getModelClass')
+            ->withNoArgs()
+            ->once()
+            ->andReturn($upload);
+
+        $upload->shouldReceive('updated');
+        $upload->shouldReceive('deleted');
+
         expect_not($this->repo->listenToUpload());
     }
 
     public function testWithUpload()
-    {
-        $model = 'model';
-        $mock = Mockery::mock('C4tech\Upload\Contracts\UploadInterface[getModel]');
-        $mock->shouldReceive('getModel')
-            ->withNoArgs()
-            ->once()
-            ->andReturn($model);
-
-        $this->mocked_model->shouldReceive('hasUpload')
-            ->with($model)
-            ->once()
-            ->andReturn(false);
-
-        expect($this->repo->withUpload($mock))
-            ->false();
-    }
-
-    public function testGetWithUpload()
     {
         $class = 'ModelClass';
         $tags = ['test-tags'];
         $cache_id = 'cache-query-id';
         $model = 'test-model';
 
-        Config::shouldReceive('get')
-            ->with('foundation.models.upload', 'foundation.models.upload')
-            ->twice()
-            ->andReturn('C4tech\Upload\Model');
+        $this->repo->shouldReceive('getModelClass')
+            ->withNoArgs()
+            ->once()
+            ->andReturn($class);
 
-        $upload = Mockery::mock('C4tech\Upload\Repository[getTags,getCacheId,withUpload]');
+        $upload = Mockery::mock('C4tech\Upload\Contracts\UploadInterface');
         $upload->id = 14;
 
         $upload->shouldReceive('getTags')
@@ -204,6 +171,11 @@ class RepositoryTraitTest extends TestCase
             ->with($class)
             ->once()
             ->andReturn($cache_id);
+
+        $upload->shouldReceive('getModel')
+            ->withNoArgs()
+            ->once()
+            ->andReturn($model);
 
         $object = Mockery::mock('C4tech\Upload\Model');
         $collection = Mockery::mock('Illuminate\Support\Collection[map]', [[$object]]);
@@ -225,16 +197,11 @@ class RepositoryTraitTest extends TestCase
             ->once()
             ->andReturn($new_collection);
 
-        $this->repo->shouldReceive('withUpload->get')
+        $this->mocked_model->shouldReceive('hasUpload->get')
             ->with($model)
             ->withNoArgs()
             ->once()
             ->andReturn($collection);
-
-        $this->repo->shouldReceive('getModelClass')
-            ->withNoArgs()
-            ->once()
-            ->andReturn($class);
 
         Cache::shouldReceive('tags->remember')
             ->with($tags)
@@ -250,7 +217,7 @@ class RepositoryTraitTest extends TestCase
             ->once()
             ->andReturn(true);
 
-        expect($this->repo->getWithUpload($upload))->true();
+        expect($this->repo->withUpload($upload))->true();
     }
 
     public function testUploads()
