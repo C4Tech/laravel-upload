@@ -4,6 +4,10 @@ File uploads are nice. We were processing uploaded files in so many
 applications, that it became easier to make a single, polymorphic relation for
 reuse across applications and entities.
 
+[![Latest Stable Version](https://poser.pugx.org/c4tech/upload/v/stable)](https://packagist.org/packages/c4tech/upload)
+[![Build Status](https://travis-ci.org/C4Tech/laravel-upload.svg?branch=master)](https://travis-ci.org/C4Tech/laravel-upload)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/C4Tech/laravel-upload/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/C4Tech/laravel-upload/?branch=master)
+[![Code Coverage](https://scrutinizer-ci.com/g/C4Tech/laravel-upload/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/C4Tech/laravel-upload/?branch=master)
 
 ## What's in the box?
 
