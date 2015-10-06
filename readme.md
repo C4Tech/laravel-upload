@@ -16,7 +16,7 @@ and Repositories, to provide the necessary functionality to relate to uploads.
 1. Add `"c4tech/upload": "1.x"` to your composer requirements and run `composer update`.
 2. Add `C4tech\Upload\ServiceProvider` to your service providers config array.
 3. Run `php artisan vendor:publish` to get the migrations.
-4. Run `php artisan migrate` to set up themigrations.
-5. Edit `config/foundation.php` and add an entry in `models` and `repos` for `upload`.
+4. Run `php artisan migrate` to set up the migrations.
+5. (Optional) Edit `config/upload.php` and change entries in `models` and `repos` to match your class names.
 5. (Optional) Map the Repository Facades in your facades config array for fast access:
     a. `"Upload" => "C4tech\Upload\Facade"`
