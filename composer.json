@@ -1,6 +1,7 @@
 {
     "name": "c4tech/upload",
     "description": "A basic package for handling uploaded files.",
+    "license": "MIT",
     "authors": [
         {
             "name": "Marcus Amargi",
@@ -33,11 +34,5 @@
             "C4tech\\Test\\Upload\\": "tests/"
         }
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://bitbucket.org/c4apps/laravel-foundation.git"
-        }
-    ],
     "minimum-stability": "stable"
 }
