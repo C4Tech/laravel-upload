@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\Log;
 trait ModelTrait
 {
     /**
-     * Uploads
-     *
-     * The Uploads associated with this entity.
+     * @inheritDoc
      */
     public function uploads()
     {
@@ -23,11 +21,7 @@ trait ModelTrait
     }
 
     /**
-     * Scope: Has Upload
-     *
-     * @param  [type] $query   [description]
-     * @param  C4tech\Upload\Contracts\UploadModelInterface
-     * @return [type]          [description]
+     * @inheritDoc
      */
     public function scopeHasUpload($query, UploadModelInterface $upload)
     {

@@ -25,10 +25,7 @@ class Model extends BaseModel implements UploadModelInterface
     }
 
     /**
-     * Uploadable
-     *
-     * Polymorphic relationship to models that have uploads.
-     * @return \Illuminate\Database\Eloquent\Relations\MorphTo
+     * @inheritdoc
      */
     public function uploadable()
     {
